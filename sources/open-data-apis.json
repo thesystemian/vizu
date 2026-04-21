@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-21",
+  "apis": {
+    "economie_mondiale": [
+      {
+        "nom": "World Bank Open Data",
+        "url_base": "https://api.worldbank.org/v2",
+        "auth": "aucune",
+        "gratuit": true,
+        "exemples": [
+          "PIB par pays : /country/{code}/indicator/NY.GDP.MKTP.CD?format=json",
+          "Dépenses militaires % PIB : /country/all/indicator/MS.MIL.XPND.GD.ZS?format=json"
+        ],
+        "actif": true
+      },
+      {
+        "nom": "UN Comtrade (Commerce international)",
+        "url_base": "https://comtradeapi.un.org/data/v1",
+        "auth": "API key (gratuit, inscription requise)",
+        "gratuit": true,
+        "note": "500 requêtes/heure en plan gratuit",
+        "actif": false
+      },
+      {
+        "nom": "FMI (IMF) Data API",
+        "url_base": "http://dataservices.imf.org/REST/SDMX_JSON.svc",
+        "auth": "aucune",
+        "gratuit": true,
+        "actif": true
+      }
+    ],
+    "geopolitique": [
+      {
+        "nom": "SIPRI Military Expenditure DB",
+        "url_base": "https://sipri.org/databases/milex",
+        "auth": "aucune (scraping CSV)",
+        "gratuit": true,
+        "methode": "Téléchargement CSV annuel + parse",
+        "actif": true
+      },
+      {
+        "nom": "ACLED Conflict Data",
+        "url_base": "https://api.acleddata.com/acled/read",
+        "auth": "API key (gratuit, inscription requise)",
+        "gratuit": true,
+        "actif": false
+      }
+    ],
+    "france": [
+      {
+        "nom": "INSEE API",
+        "url_base": "https://api.insee.fr/series/BDM/V1",
+        "auth": "API key (gratuit)",
+        "gratuit": true,
+        "actif": false
+      },
+      {
+        "nom": "Data.gouv.fr",
+        "url_base": "https://www.data.gouv.fr/api/1",
+        "auth": "aucune",
+        "gratuit": true,
+        "actif": true
+      }
+    ],
+    "ia_tech": [
+      {
+        "nom": "ArXiv API",
+        "url_base": "http://export.arxiv.org/api/query",
+        "auth": "aucune",
+        "gratuit": true,
+        "exemple": "?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=10",
+        "actif": true
+      },
+      {
+        "nom": "GitHub API (Trending repos)",
+        "url_base": "https://api.github.com",
+        "auth": "Token optionnel (rate limit plus élevé)",
+        "gratuit": true,
+        "actif": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-21",
+  "outil_scraping": "yt-dlp",
+  "methode": "Extraire les transcripts auto-générés des 3 dernières vidéos",
+  "channels": {
+    "geopolitique_fr": [
+      {
+        "nom": "Alexis Poulin",
+        "channel_id": "UCIzVuXsEZAYRRF3dq_MEKkw",
+        "url": "https://www.youtube.com/@AlexisPoulin",
+        "frequence": "quotidien",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "nom": "Géopolitique Profonde",
+        "channel_id": "UCNJnmxZi6v9Jml0mTTqBSig",
+        "url": "https://www.youtube.com/@GeopolitiqueProfonde",
+        "frequence": "quotidien",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "nom": "Thinkerview",
+        "channel_id": "UCgEM_EE0YBqbFN-H_YGKREA",
+        "url": "https://www.youtube.com/@Thinkerview",
+        "frequence": "hebdomadaire",
+        "categorie": "geopolitique",
+        "actif": true
+      }
+    ],
+    "ia_tech_fr": [
+      {
+        "nom": "Silicon Carne",
+        "channel_id": "UCIzVuXsEZAYRRF3dq_test1",
+        "url": "https://www.youtube.com/@SiliconCarne",
+        "frequence": "quotidien",
+        "categorie": "ia_tech",
+        "actif": true
+      },
+      {
+        "nom": "Idriss J. Aberkane",
+        "channel_id": "UCIzVuXsEZAYRRF3dq_test2",
+        "url": "https://www.youtube.com/@IdrissAberkane",
+        "frequence": "quotidien",
+        "categorie": "ia_tech",
+        "actif": true
+      }
+    ],
+    "data_osint_en": [
+      {
+        "nom": "TLDR News",
+        "channel_id": "UCIzVuXsEZAYRRF3dq_test3",
+        "url": "https://www.youtube.com/@TLDRNewsGlobal",
+        "frequence": "quotidien",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "nom": "Our World in Data",
+        "channel_id": "UCIzVuXsEZAYRRF3dq_test4",
+        "url": "https://www.youtube.com/@OurWorldinData",
+        "frequence": "hebdomadaire",
+        "categorie": "open_data",
+        "actif": true
+      }
+    ]
+  },
+  "commande_yt_dlp": "yt-dlp --write-auto-sub --sub-lang fr,en --skip-download --playlist-end 3 {url}"
+}

@@ -1,0 +1,11 @@
+.DS_Store
+*.rtfd/
+.env
+*.env.*
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+secrets/
+*.key
+*.pem

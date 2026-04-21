@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-21",
+  "feeds": {
+    "mainstream": [
+      {
+        "name": "Reuters",
+        "url": "https://feeds.reuters.com/reuters/topNews",
+        "langue": "en",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "AFP (via Le Monde)",
+        "url": "https://www.lemonde.fr/rss/une.xml",
+        "langue": "fr",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "BBC World",
+        "url": "http://feeds.bbci.co.uk/news/world/rss.xml",
+        "langue": "en",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "Le Monde Diplomatique",
+        "url": "https://www.monde-diplomatique.fr/recents.atom",
+        "langue": "fr",
+        "categorie": "geopolitique",
+        "actif": true
+      }
+    ],
+    "osint_data": [
+      {
+        "name": "Our World in Data",
+        "url": "https://ourworldindata.org/atom.xml",
+        "langue": "en",
+        "categorie": "open_data",
+        "actif": true
+      },
+      {
+        "name": "ACLED (Conflict Data)",
+        "url": "https://acleddata.com/feed/",
+        "langue": "en",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "Global Voices",
+        "url": "https://globalvoices.org/feed/",
+        "langue": "en",
+        "categorie": "geopolitique",
+        "actif": true
+      }
+    ],
+    "alt_media": [
+      {
+        "name": "Tocsin",
+        "url": "https://tocsin.fr/feed/",
+        "langue": "fr",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "Géopolitique Profonde",
+        "url": "https://geopolitique-profonde.com/feed",
+        "langue": "fr",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "Les Crises (Olivier Berruyer)",
+        "url": "https://www.les-crises.fr/feed/",
+        "langue": "fr",
+        "categorie": "geopolitique",
+        "actif": true
+      },
+      {
+        "name": "The Intercept",
+        "url": "https://theintercept.com/feed/?lang=en",
+        "langue": "en",
+        "categorie": "geopolitique",
+        "actif": true
+      }
+    ],
+    "ia_tech": [
+      {
+        "name": "ArXiv CS.AI",
+        "url": "https://arxiv.org/rss/cs.AI",
+        "langue": "en",
+        "categorie": "ia_tech",
+        "actif": true
+      },
+      {
+        "name": "HuggingFace Blog",
+        "url": "https://huggingface.co/blog/feed.xml",
+        "langue": "en",
+        "categorie": "ia_tech",
+        "actif": true
+      },
+      {
+        "name": "MIT Technology Review",
+        "url": "https://www.technologyreview.com/feed/",
+        "langue": "en",
+        "categorie": "ia_tech",
+        "actif": true
+      },
+      {
+        "name": "Wired (Tech)",
+        "url": "https://www.wired.com/feed/rss",
+        "langue": "en",
+        "categorie": "ia_tech",
+        "actif": true
+      }
+    ]
+  }
+}

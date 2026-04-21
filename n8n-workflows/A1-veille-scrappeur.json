@@ -1,0 +1,126 @@
+{
+  "name": "A1 — Veilleur-Scrappeur",
+  "nodes": [
+    {
+      "id": "trigger-cron",
+      "type": "n8n-nodes-base.cron",
+      "name": "Déclencheur Cron (06h 12h 18h)",
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {"hour": 6, "minute": 0},
+            {"hour": 12, "minute": 0},
+            {"hour": 18, "minute": 0}
+          ]
+        }
+      }
+    },
+    {
+      "id": "rss-fetch",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "name": "Fetch RSS Feeds",
+      "parameters": {
+        "url": "{{$json.feed_url}}",
+        "options": {}
+      },
+      "note": "Itérer sur rss-feeds.json — utiliser un Split In Batches sur les feeds actifs"
+    },
+    {
+      "id": "yt-transcript",
+      "type": "n8n-nodes-base.executeCommand",
+      "name": "YT Transcripts (yt-dlp)",
+      "parameters": {
+        "command": "yt-dlp --write-auto-sub --sub-lang fr,en --skip-download --playlist-end 3 {{$json.channel_url}}"
+      }
+    },
+    {
+      "id": "opendata-fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "Fetch Open Data APIs",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.worldbank.org/v2/country/all/indicator/MS.MIL.XPND.GD.ZS?format=json&mrv=1"
+      }
+    },
+    {
+      "id": "merge-inputs",
+      "type": "n8n-nodes-base.merge",
+      "name": "Merge All Inputs",
+      "parameters": {
+        "mode": "multiplex"
+      }
+    },
+    {
+      "id": "claude-scoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "Claude API — Score Tension",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "headers": {
+          "x-api-key": "{{$env.ANTHROPIC_API_KEY}}",
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json"
+        },
+        "body": {
+          "model": "claude-sonnet-4-6",
+          "max_tokens": 1024,
+          "system": "{{SYSTEM_PROMPT_A1}}",
+          "messages": [{"role": "user", "content": "{{$json.user_prompt}}"}]
+        }
+      }
+    },
+    {
+      "id": "filter-tension",
+      "type": "n8n-nodes-base.if",
+      "name": "Filtre score_tension ≥ 6",
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "{{$json.score_tension}}",
+              "operation": "largerEqual",
+              "value2": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "output-json",
+      "type": "n8n-nodes-base.googleSheets",
+      "name": "Save to Google Sheets (A1 Output)",
+      "parameters": {
+        "operation": "append",
+        "sheetId": "{{$env.GOOGLE_SHEET_ID_A1}}",
+        "range": "A1-Output!A:Z"
+      }
+    },
+    {
+      "id": "trigger-A2",
+      "type": "n8n-nodes-base.httpRequest",
+      "name": "Trigger A2-Auditeur (webhook)",
+      "parameters": {
+        "method": "POST",
+        "url": "{{$env.N8N_WEBHOOK_A2}}",
+        "body": "{{$json}}"
+      },
+      "note": "À activer quand A2 sera en place"
+    }
+  ],
+  "connections": {
+    "trigger-cron": ["rss-fetch", "yt-transcript", "opendata-fetch"],
+    "rss-fetch": ["merge-inputs"],
+    "yt-transcript": ["merge-inputs"],
+    "opendata-fetch": ["merge-inputs"],
+    "merge-inputs": ["claude-scoring"],
+    "claude-scoring": ["filter-tension"],
+    "filter-tension (true)": ["output-json"],
+    "output-json": ["trigger-A2"]
+  },
+  "env_vars_required": [
+    "ANTHROPIC_API_KEY",
+    "GOOGLE_SHEET_ID_A1",
+    "N8N_WEBHOOK_A2"
+  ]
+}
