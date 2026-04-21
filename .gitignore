@@ -9,3 +9,7 @@ __pycache__/
 secrets/
 *.key
 *.pem
+dashboard/node_modules/
+dashboard/vizu.db
+filesVizuDashboard_extracted/
+filesVizuDashboard.zip

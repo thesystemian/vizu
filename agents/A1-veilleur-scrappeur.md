@@ -1,3 +1,11 @@
+---
+id: A1
+nom: Veilleur-Scrappeur
+statut: en-dev
+priorite: 1
+webhook_n8n: http://localhost:5678/webhook/a1-trigger
+---
+
 # A1 — Veilleur-Scrappeur
 
 **Rôle :** Oracle du système Vizu. Collecte, filtre et structure les signaux d'information bruts.

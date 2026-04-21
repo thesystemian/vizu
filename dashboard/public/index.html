@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIZU — Control Room</title>
+  <style>
+    :root {
+      --bg:        #050912;
+      --bg-s:      #0c1120;
+      --bg-card:   #131929;
+      --border:    #1e2d4a;
+      --border-hi: #2a4070;
+      --cyan:      #00d4ff;
+      --green:     #00ff88;
+      --purple:    #9d4edd;
+      --orange:    #ff6b35;
+      --red:       #ff3b5c;
+      --amber:     #f59e0b;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --dim:       #334155;
+      --mono:      'Courier New', monospace;
+      --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 220px; min-height:100vh; background:var(--bg-s);
+      border-right:1px solid var(--border); display:flex; flex-direction:column;
+      position:fixed; left:0; top:0; bottom:0; z-index:50;
+    }
+    .logo {
+      padding:24px 20px 20px;
+      border-bottom:1px solid var(--border);
+    }
+    .logo h1 {
+      font-size:22px; font-weight:700; letter-spacing:2px;
+      background:linear-gradient(135deg,var(--cyan),var(--purple));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .logo span { font-size:11px; color:var(--muted); display:block; margin-top:2px; }
+    nav { flex:1; padding:16px 0; }
+    .nav-item {
+      display:flex; align-items:center; gap:10px; padding:10px 20px;
+      font-size:13px; color:var(--muted); cursor:pointer;
+      border-left:3px solid transparent; transition:all .2s;
+      user-select:none;
+    }
+    .nav-item:hover { color:var(--text); background:rgba(0,212,255,.04); }
+    .nav-item.active { color:var(--cyan); border-left-color:var(--cyan); background:rgba(0,212,255,.07); }
+    .nav-icon { width:16px; text-align:center; font-size:15px; }
+    .sidebar-footer {
+      padding:16px 20px; border-top:1px solid var(--border);
+      font-size:11px; color:var(--dim);
+    }
+    .pulse-dot {
+      width:7px; height:7px; border-radius:50%; background:var(--green);
+      animation:pulse 2s infinite; display:inline-block; margin-right:6px;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── MAIN ── */
+    #main { margin-left:220px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar {
+      padding:16px 32px; border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      background:var(--bg-s); position:sticky; top:0; z-index:40;
+    }
+    .topbar-title { font-size:16px; font-weight:600; }
+    .topbar-week { font-size:12px; color:var(--muted); font-family:var(--mono); }
+    .content { padding:32px; flex:1; }
+
+    /* ── CARDS ── */
+    .card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:10px; padding:24px; position:relative; overflow:hidden;
+      transition:border-color .2s;
+    }
+    .card:hover { border-color:var(--border-hi); }
+    .card-title {
+      font-size:11px; text-transform:uppercase; letter-spacing:1.5px;
+      color:var(--muted); margin-bottom:10px;
+    }
+    .card-value { font-size:32px; font-weight:700; font-family:var(--mono); }
+    .card-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+    .section-title {
+      font-size:16px; font-weight:600; margin-bottom:20px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .section-title::before {
+      content:''; width:3px; height:18px;
+      background:linear-gradient(180deg,var(--cyan),var(--purple));
+      border-radius:2px; display:block;
+    }
+
+    /* ── GRID ── */
+    .grid { display:grid; gap:16px; }
+    .g2 { grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+    .g3 { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+    .g4 { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+
+    /* ── BADGES ── */
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;
+      text-transform:uppercase; letter-spacing:.5px;
+    }
+    .badge-cyan    { background:rgba(0,212,255,.12); color:var(--cyan); }
+    .badge-green   { background:rgba(0,255,136,.12); color:var(--green); }
+    .badge-purple  { background:rgba(157,78,221,.15); color:var(--purple); }
+    .badge-orange  { background:rgba(255,107,53,.12); color:var(--orange); }
+    .badge-red     { background:rgba(255,59,92,.12); color:var(--red); }
+    .badge-amber   { background:rgba(245,158,11,.12); color:var(--amber); }
+    .badge-dim     { background:rgba(51,65,85,.4); color:var(--muted); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding:8px 14px; border-radius:6px; font-size:12px; font-weight:600;
+      cursor:pointer; border:1px solid var(--border); background:var(--bg-s);
+      color:var(--text); transition:all .2s; letter-spacing:.5px;
+      text-transform:uppercase; font-family:var(--sans);
+    }
+    .btn:hover { border-color:var(--cyan); color:var(--cyan); }
+    .btn-primary { background:var(--cyan); color:var(--bg); border-color:var(--cyan); }
+    .btn-primary:hover { background:rgba(0,212,255,.85); box-shadow:0 0 20px rgba(0,212,255,.3); color:var(--bg); }
+    .btn-danger { border-color:var(--red); color:var(--red); }
+    .btn-danger:hover { background:rgba(255,59,92,.1); }
+    .btn-sm { padding:5px 10px; font-size:11px; }
+    .btn-group { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+
+    /* ── TOGGLE ── */
+    .toggle { position:relative; display:inline-block; width:36px; height:20px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider {
+      position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
+      background:var(--dim); border-radius:20px; transition:.3s;
+    }
+    .toggle-slider:before {
+      content:''; position:absolute; height:14px; width:14px;
+      left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s;
+    }
+    input:checked + .toggle-slider { background:var(--cyan); }
+    input:checked + .toggle-slider:before { transform:translateX(16px); }
+
+    /* ── KANBAN ── */
+    .kanban { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .kanban-col {
+      background:var(--bg-s); border:1px solid var(--border);
+      border-radius:8px; padding:14px; min-height:300px;
+    }
+    .kanban-col-title {
+      font-size:11px; text-transform:uppercase; letter-spacing:1.5px;
+      color:var(--muted); margin-bottom:12px; display:flex; justify-content:space-between;
+      align-items:center;
+    }
+    .kanban-col-title span { font-family:var(--mono); }
+    .kanban-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:6px; padding:12px; margin-bottom:8px;
+      cursor:pointer; transition:all .2s; border-left:3px solid transparent;
+    }
+    .kanban-card:hover { border-color:var(--border-hi); transform:translateY(-1px); }
+    .kanban-card.tension-high  { border-left-color:var(--red); }
+    .kanban-card.tension-mid   { border-left-color:var(--cyan); }
+    .kanban-card.tension-low   { border-left-color:var(--orange); }
+    .kc-name { font-size:13px; font-weight:500; margin-bottom:6px; line-height:1.4; }
+    .kc-meta { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+
+    /* ── AGENTS GRID ── */
+    .agent-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:10px; padding:20px; transition:all .2s; position:relative;
+    }
+    .agent-card.actif    { border-top:2px solid var(--green); }
+    .agent-card.en-dev   { border-top:2px solid var(--amber); }
+    .agent-card.inactif  { border-top:2px solid var(--dim); opacity:.7; }
+    .agent-id { font-size:24px; font-weight:700; font-family:var(--mono); color:var(--cyan); margin-bottom:4px; }
+    .agent-nom { font-size:14px; font-weight:500; margin-bottom:10px; }
+    .agent-meta { font-size:11px; color:var(--muted); margin-top:8px; }
+    .agent-actions { margin-top:14px; display:flex; gap:8px; }
+
+    /* ── SOURCES TABLE ── */
+    .tabs { display:flex; gap:4px; margin-bottom:20px; }
+    .tab {
+      padding:7px 14px; border-radius:6px; font-size:12px; cursor:pointer;
+      border:1px solid var(--border); color:var(--muted); transition:all .2s;
+      text-transform:uppercase; letter-spacing:.5px; font-weight:500;
+    }
+    .tab:hover { color:var(--text); border-color:var(--border-hi); }
+    .tab.active { background:rgba(0,212,255,.1); border-color:var(--cyan); color:var(--cyan); }
+    .source-row {
+      display:flex; align-items:center; gap:12px; padding:10px 14px;
+      border-bottom:1px solid var(--border); transition:background .15s;
+    }
+    .source-row:hover { background:rgba(255,255,255,.02); }
+    .source-row:last-child { border-bottom:none; }
+    .source-name { flex:1; font-size:13px; }
+    .source-cat  { font-size:11px; color:var(--muted); width:100px; }
+    .source-lang { font-size:11px; color:var(--dim); width:30px; }
+
+    /* ── SOCIAL ── */
+    .social-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:10px; padding:20px; display:flex; flex-direction:column; gap:12px;
+    }
+    .social-header { display:flex; align-items:center; gap:12px; }
+    .social-icon { font-size:28px; }
+    .social-name { font-size:15px; font-weight:600; }
+    .social-stat { display:flex; justify-content:space-between; font-size:13px; }
+    .social-stat-label { color:var(--muted); }
+    .social-stat-value { font-family:var(--mono); font-weight:600; }
+
+    /* ── METRICS ── */
+    .metrics-row { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .metric-input { display:flex; flex-direction:column; gap:4px; }
+    .metric-input label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .metric-input input {
+      background:var(--bg-s); border:1px solid var(--border); color:var(--text);
+      padding:8px 12px; border-radius:6px; font-size:14px; font-family:var(--mono);
+      transition:border-color .2s;
+    }
+    .metric-input input:focus { outline:none; border-color:var(--cyan); }
+
+    /* ── TIMELINE ── */
+    .timeline { position:relative; padding-left:20px; }
+    .timeline::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+      background:linear-gradient(180deg,var(--cyan),transparent);
+    }
+    .tl-item { display:flex; gap:12px; margin-bottom:14px; position:relative; }
+    .tl-dot {
+      position:absolute; left:-24px; top:4px;
+      width:10px; height:10px; border-radius:50%; background:var(--cyan); border:2px solid var(--bg);
+    }
+    .tl-time { font-size:11px; color:var(--dim); font-family:var(--mono); min-width:50px; padding-top:1px; }
+    .tl-text { font-size:13px; color:var(--muted); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.7);
+      z-index:100; align-items:center; justify-content:center;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:var(--bg-card); border:1px solid var(--border-hi);
+      border-radius:12px; padding:28px; max-width:520px; width:90%;
+      max-height:85vh; overflow-y:auto;
+    }
+    .modal h3 { font-size:16px; margin-bottom:20px; }
+    .form-group { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .form-group label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .form-group input, .form-group select, .form-group textarea {
+      background:var(--bg-s); border:1px solid var(--border); color:var(--text);
+      padding:9px 12px; border-radius:6px; font-size:13px; font-family:var(--sans);
+      transition:border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline:none; border-color:var(--cyan);
+    }
+    .form-group textarea { resize:vertical; min-height:70px; }
+    .form-group select option { background:var(--bg-card); }
+    .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+
+    /* ── LOG VIEWER ── */
+    .log-box {
+      background:var(--bg); border:1px solid var(--border); border-radius:6px;
+      padding:12px; font-family:var(--mono); font-size:12px; color:var(--green);
+      max-height:200px; overflow-y:auto; white-space:pre-wrap; margin-top:12px;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:24px; right:24px; z-index:200;
+      padding:12px 20px; border-radius:8px; font-size:13px; font-weight:500;
+      background:var(--bg-card); border:1px solid var(--border);
+      transform:translateY(100px); opacity:0; transition:all .3s;
+      pointer-events:none;
+    }
+    #toast.show { transform:translateY(0); opacity:1; }
+    #toast.success { border-color:var(--green); color:var(--green); }
+    #toast.error   { border-color:var(--red);   color:var(--red);   }
+    #toast.info    { border-color:var(--cyan);  color:var(--cyan);  }
+
+    /* ── PAGE VISIBILITY ── */
+    .page { display:none; }
+    .page.active { display:block; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align:center; padding:48px 20px; color:var(--dim);
+    }
+    .empty-icon { font-size:36px; margin-bottom:12px; }
+    .empty-text { font-size:14px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width:900px) {
+      #sidebar { width:60px; }
+      .nav-label { display:none; }
+      #main { margin-left:60px; }
+      .logo span, .logo-text, .sidebar-footer { display:none; }
+      .kanban { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="logo">
+    <h1>VIZU</h1>
+    <span class="logo-text">Control Room</span>
+  </div>
+  <nav>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showPage('pipeline')" id="nav-pipeline">
+      <span class="nav-icon">🔄</span>
+      <span class="nav-label">Pipeline</span>
+    </div>
+    <div class="nav-item" onclick="showPage('agents')" id="nav-agents">
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">Agents</span>
+    </div>
+    <div class="nav-item" onclick="showPage('sources')" id="nav-sources">
+      <span class="nav-icon">📡</span>
+      <span class="nav-label">Sources</span>
+    </div>
+    <div class="nav-item" onclick="showPage('social')" id="nav-social">
+      <span class="nav-icon">📱</span>
+      <span class="nav-label">Réseaux</span>
+    </div>
+    <div class="nav-item" onclick="showPage('metrics')" id="nav-metrics">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">Métriques</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="pulse-dot"></span> Live
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Dashboard</span>
+    <span class="topbar-week" id="current-week">—</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════ PAGE: DASHBOARD ══════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid g4" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">Shorts / semaine</div>
+          <div class="card-value" id="m-shorts">0</div>
+          <div class="card-sub">Cible : 3</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Vues totales</div>
+          <div class="card-value" id="m-views">0</div>
+          <div class="card-sub">YT + TikTok</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Coût IA (USD)</div>
+          <div class="card-value" id="m-cost">$0</div>
+          <div class="card-sub">Claude API</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Sujets en cours</div>
+          <div class="card-value" id="m-subjects">0</div>
+          <div class="card-sub">Cette semaine</div>
+        </div>
+      </div>
+
+      <!-- Pipeline semaine -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="section-title">Pipeline Semaine</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="pipeline-bar">
+          <!-- généré dynamiquement -->
+        </div>
+      </div>
+
+      <!-- Sujets récents + Timeline -->
+      <div class="grid g2">
+        <div class="card">
+          <div class="section-title">Sujets récents</div>
+          <div id="recent-subjects"><div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucun sujet encore</div></div></div>
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openModal('modal-add-subject')">+ Nouveau Sujet</button>
+            <button class="btn" onclick="showPage('pipeline')">Voir Pipeline →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">Activité Récente</div>
+          <div class="timeline" id="activity-timeline">
+            <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">now</div><div class="tl-text">Dashboard démarré</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ PAGE: PIPELINE ══════════════════ -->
+    <div class="page" id="page-pipeline">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div class="section-title" style="margin:0">Kanban Pipeline</div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-subject')">+ Sujet</button>
+      </div>
+      <div class="kanban" id="kanban-board">
+        <!-- généré -->
+      </div>
+    </div>
+
+    <!-- ══════════════════ PAGE: AGENTS ══════════════════ -->
+    <div class="page" id="page-agents">
+      <div class="section-title">Agents A1 → A9</div>
+      <div class="grid g3" id="agents-grid">
+        <div class="empty"><div class="empty-icon">⏳</div><div class="empty-text">Chargement...</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ PAGE: SOURCES ══════════════════ -->
+    <div class="page" id="page-sources">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div class="section-title" style="margin:0">Sources</div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-source')">+ Source</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchSourceTab('rss',this)">RSS Feeds</div>
+        <div class="tab" onclick="switchSourceTab('youtube',this)">YouTube</div>
+        <div class="tab" onclick="switchSourceTab('apis',this)">Open Data APIs</div>
+      </div>
+      <div class="card" id="sources-content" style="padding:0">
+        <div class="empty" style="padding:40px"><div class="empty-icon">📡</div><div class="empty-text">Chargement...</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ PAGE: RÉSEAUX SOCIAUX ══════════════════ -->
+    <div class="page" id="page-social">
+      <div class="section-title">Réseaux Sociaux</div>
+      <div class="grid g3" style="margin-bottom:24px">
+        <div class="social-card">
+          <div class="social-header">
+            <span class="social-icon">▶️</span>
+            <div>
+              <div class="social-name">YouTube</div>
+              <span class="badge badge-amber" id="yt-status">À créer</span>
+            </div>
+          </div>
+          <div class="social-stat"><span class="social-stat-label">Abonnés</span><span class="social-stat-value" id="yt-subs">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Vues totales</span><span class="social-stat-value" id="yt-views">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Vidéos</span><span class="social-stat-value" id="yt-videos">—</span></div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-sm" onclick="editSocial('youtube')">Mettre à jour</button>
+          </div>
+        </div>
+        <div class="social-card">
+          <div class="social-header">
+            <span class="social-icon">🎵</span>
+            <div>
+              <div class="social-name">TikTok</div>
+              <span class="badge badge-amber" id="tt-status">À créer</span>
+            </div>
+          </div>
+          <div class="social-stat"><span class="social-stat-label">Abonnés</span><span class="social-stat-value" id="tt-subs">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Vues totales</span><span class="social-stat-value" id="tt-views">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Vidéos</span><span class="social-stat-value" id="tt-videos">—</span></div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-sm" onclick="editSocial('tiktok')">Mettre à jour</button>
+          </div>
+        </div>
+        <div class="social-card">
+          <div class="social-header">
+            <span class="social-icon">💼</span>
+            <div>
+              <div class="social-name">LinkedIn</div>
+              <span class="badge badge-amber" id="li-status">À configurer</span>
+            </div>
+          </div>
+          <div class="social-stat"><span class="social-stat-label">Connexions</span><span class="social-stat-value" id="li-conn">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Impressions/sem</span><span class="social-stat-value" id="li-imp">—</span></div>
+          <div class="social-stat"><span class="social-stat-label">Posts Vizu</span><span class="social-stat-value" id="li-posts">—</span></div>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-sm" onclick="editSocial('linkedin')">Mettre à jour</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publications récentes -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div class="section-title" style="margin:0">Publications</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-publish')">+ Ajouter</button>
+        </div>
+        <div id="publishing-list">
+          <div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune publication encore</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ PAGE: MÉTRIQUES ══════════════════ -->
+    <div class="page" id="page-metrics">
+      <div class="section-title">Métriques Semaine <span id="metrics-week" style="font-family:var(--mono); font-size:14px; color:var(--cyan)"></span></div>
+      <div class="grid g2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title" style="font-size:14px">Mise à jour manuelle</div>
+          <div class="metrics-row">
+            <div class="metric-input"><label>Shorts publiés</label><input type="number" id="in-shorts" min="0" placeholder="0"></div>
+            <div class="metric-input"><label>Vues YouTube</label><input type="number" id="in-yt" min="0" placeholder="0"></div>
+            <div class="metric-input"><label>Vues TikTok</label><input type="number" id="in-tt" min="0" placeholder="0"></div>
+            <div class="metric-input"><label>Impressions LinkedIn</label><input type="number" id="in-li" min="0" placeholder="0"></div>
+            <div class="metric-input"><label>Coût IA (USD)</label><input type="number" id="in-cost" min="0" step="0.01" placeholder="0.00"></div>
+          </div>
+          <div class="btn-group"><button class="btn btn-primary" onclick="saveMetrics()">Sauvegarder</button></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="font-size:14px">Résumé</div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div class="social-stat"><span class="social-stat-label">Shorts</span><span class="social-stat-value" id="s-shorts">—</span></div>
+            <div class="social-stat"><span class="social-stat-label">YouTube</span><span class="social-stat-value" id="s-yt">—</span></div>
+            <div class="social-stat"><span class="social-stat-label">TikTok</span><span class="social-stat-value" id="s-tt">—</span></div>
+            <div class="social-stat"><span class="social-stat-label">LinkedIn</span><span class="social-stat-value" id="s-li">—</span></div>
+            <div class="social-stat"><span class="social-stat-label">Coût IA</span><span class="social-stat-value" id="s-cost">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- Add Subject -->
+<div class="modal-overlay" id="modal-add-subject" onclick="closeModalOutside(event,this)">
+  <div class="modal">
+    <h3>Nouveau Sujet</h3>
+    <div class="form-group"><label>Titre</label><input id="f-subj-name" placeholder="ex: Anthropic vs Pentagon"></div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="f-subj-cat">
+        <option value="geopolitique">Géopolitique</option>
+        <option value="ia_tech">IA / Tech</option>
+        <option value="economie">Économie</option>
+        <option value="social">Social</option>
+        <option value="environnement">Environnement</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Score de tension (0-10)</label><input id="f-subj-score" type="number" min="0" max="10" step="0.5" placeholder="7.5"></div>
+    <div class="form-group"><label>Notes</label><textarea id="f-subj-notes" placeholder="Angle, sources clés, idées de visuel..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-subject')">Annuler</button>
+      <button class="btn btn-primary" onclick="addSubject()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subject Detail -->
+<div class="modal-overlay" id="modal-subject-detail" onclick="closeModalOutside(event,this)">
+  <div class="modal">
+    <h3 id="detail-title">Sujet</h3>
+    <div style="margin-bottom:14px">
+      <span id="detail-badge"></span>
+      <span id="detail-score" style="margin-left:8px; font-family:var(--mono); font-size:12px; color:var(--muted)"></span>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="detail-notes" rows="4"></textarea></div>
+    <div class="form-group">
+      <label>Avancer dans le pipeline</label>
+      <select id="detail-status">
+        <option value="scrape">Scrape (A1)</option>
+        <option value="analyze">Analyze (A2)</option>
+        <option value="design">Design (A5)</option>
+        <option value="publish">Publish (A7)</option>
+        <option value="done">Done ✓</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="deleteSubject()">Supprimer</button>
+      <button class="btn" onclick="closeModal('modal-subject-detail')">Fermer</button>
+      <button class="btn btn-primary" onclick="saveSubjectDetail()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Source -->
+<div class="modal-overlay" id="modal-add-source" onclick="closeModalOutside(event,this)">
+  <div class="modal">
+    <h3>Ajouter une Source</h3>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="f-src-type">
+        <option value="rss">RSS Feed</option>
+        <option value="youtube">YouTube Channel</option>
+        <option value="apis">Open Data API</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="f-src-cat">
+        <option value="mainstream">Mainstream</option>
+        <option value="osint_data">OSINT / Data</option>
+        <option value="alt_media">Alt Media</option>
+        <option value="ia_tech">IA / Tech</option>
+        <option value="geopolitique_fr">Géopo FR</option>
+        <option value="economie_mondiale">Économie</option>
+        <option value="france">France</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Nom</label><input id="f-src-name" placeholder="ex: Reuters"></div>
+    <div class="form-group"><label>URL</label><input id="f-src-url" placeholder="https://..."></div>
+    <div class="form-group">
+      <label>Langue</label>
+      <select id="f-src-lang">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-source')">Annuler</button>
+      <button class="btn btn-primary" onclick="addSource()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Publishing -->
+<div class="modal-overlay" id="modal-add-publish" onclick="closeModalOutside(event,this)">
+  <div class="modal">
+    <h3>Enregistrer une Publication</h3>
+    <div class="form-group"><label>Sujet</label><select id="f-pub-subject"></select></div>
+    <div class="form-group">
+      <label>Plateforme</label>
+      <select id="f-pub-platform">
+        <option value="youtube">YouTube</option>
+        <option value="tiktok">TikTok</option>
+        <option value="linkedin">LinkedIn</option>
+      </select>
+    </div>
+    <div class="form-group"><label>URL</label><input id="f-pub-url" placeholder="https://..."></div>
+    <div class="form-group"><label>Vues initiales</label><input id="f-pub-views" type="number" min="0" placeholder="0"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-publish')">Annuler</button>
+      <button class="btn btn-primary" onclick="addPublishing()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Social -->
+<div class="modal-overlay" id="modal-social" onclick="closeModalOutside(event,this)">
+  <div class="modal">
+    <h3 id="social-modal-title">Mettre à jour</h3>
+    <div id="social-modal-fields"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-social')">Fermer</button>
+      <button class="btn btn-primary" onclick="saveSocial()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const API = '';  // même origin — proxy via server.js
+let state = {
+  currentPage: 'dashboard',
+  subjects: [],
+  agents: [],
+  sources: { rss: null, youtube: null, apis: null },
+  currentSourceTab: 'rss',
+  metrics: {},
+  publishing: [],
+  currentSubjectId: null,
+  social: JSON.parse(localStorage.getItem('vizu-social') || '{}')
+};
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard: 'Dashboard',
+  pipeline: 'Pipeline',
+  agents: 'Agents',
+  sources: 'Sources',
+  social: 'Réseaux Sociaux',
+  metrics: 'Métriques'
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[name];
+  state.currentPage = name;
+  if (name === 'agents')  loadAgents();
+  if (name === 'sources') loadSources(state.currentSourceTab);
+  if (name === 'social')  renderSocial();
+  if (name === 'metrics') loadMetrics();
+  if (name === 'pipeline') renderKanban();
+}
+
+// ═══════════════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════════════
+async function api(method, path, body) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch('/api' + path, opts);
+    return await r.json();
+  } catch(e) { toast('Erreur réseau: ' + e.message, 'error'); return null; }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, el) { if (e.target === el) el.classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+async function loadDashboard() {
+  const data = await api('GET', '/status');
+  if (!data) return;
+
+  // Semaine
+  document.getElementById('current-week').textContent = data.week;
+  document.getElementById('metrics-week').textContent = data.week;
+
+  // Métriques
+  const m = data.metrics || {};
+  document.getElementById('m-shorts').textContent = m.shorts_count || 0;
+  document.getElementById('m-views').textContent  = (m.youtube_views || 0) + (m.tiktok_views || 0);
+  document.getElementById('m-cost').textContent   = '$' + (m.ai_cost_usd || 0).toFixed(2);
+
+  state.subjects = data.subjects || [];
+  document.getElementById('m-subjects').textContent = state.subjects.filter(s => s.status !== 'done').length;
+
+  renderRecentSubjects();
+  renderPipelineBar();
+  renderKanban();
+  renderActivityTimeline();
+}
+
+// ═══════════════════════════════════════════════════════
+// SUBJECTS / PIPELINE
+// ═══════════════════════════════════════════════════════
+const STAGES = [
+  { key: 'scrape',  label: 'A1 Scrape',  day: 'Lun' },
+  { key: 'analyze', label: 'A2 Analyze', day: 'Mer' },
+  { key: 'design',  label: 'A5 Design',  day: 'Jeu' },
+  { key: 'publish', label: 'A7 Publish', day: 'Ven' },
+  { key: 'done',    label: 'Done',       day: '✓'   }
+];
+
+const STAGE_COLORS = { scrape:'cyan', analyze:'purple', design:'orange', publish:'green', done:'dim' };
+
+function stageBadge(status) {
+  const s = STAGES.find(x => x.key === status) || STAGES[0];
+  return `<span class="badge badge-${STAGE_COLORS[status] || 'dim'}">${s.label}</span>`;
+}
+
+function tensionClass(score) {
+  if (score >= 7.5) return 'tension-high';
+  if (score >= 5)   return 'tension-mid';
+  return 'tension-low';
+}
+
+function renderPipelineBar() {
+  const bar = document.getElementById('pipeline-bar');
+  const now = new Date().getDay(); // 1=Lun, 3=Mer, 4=Jeu, 5=Ven
+  const activeMap = { 1:'scrape', 3:'analyze', 4:'design', 5:'publish' };
+  const todayStage = activeMap[now] || '';
+  bar.innerHTML = STAGES.filter(s => s.key !== 'done').map(s => `
+    <div style="flex:1; min-width:110px; background:${s.key===todayStage?'rgba(0,212,255,.08)':'var(--bg-s)'};
+      border:1px solid ${s.key===todayStage?'var(--cyan)':'var(--border)'}; border-radius:8px; padding:12px; text-align:center;">
+      <div style="font-size:11px; color:${s.key===todayStage?'var(--cyan)':'var(--muted)'}; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px">${s.day}</div>
+      <div style="font-size:13px; font-weight:600">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderRecentSubjects() {
+  const el = document.getElementById('recent-subjects');
+  const recent = state.subjects.slice(0, 5);
+  if (!recent.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucun sujet encore</div></div>';
+    return;
+  }
+  el.innerHTML = recent.map(s => `
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer"
+         onclick="openSubjectDetail(${s.id})">
+      <div style="width:8px; height:8px; border-radius:50%; background:${statusColor(s.status)}; flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:13px">${s.name}</div>
+        <div style="font-size:11px; color:var(--muted)">${s.category}</div>
+      </div>
+      ${stageBadge(s.status)}
+    </div>
+  `).join('');
+}
+
+function statusColor(st) {
+  return { scrape:'var(--amber)', analyze:'var(--cyan)', design:'var(--purple)', publish:'var(--green)', done:'var(--dim)' }[st] || 'var(--muted)';
+}
+
+function renderKanban() {
+  const board = document.getElementById('kanban-board');
+  const columns = STAGES.map(stage => {
+    const cards = state.subjects.filter(s => s.status === stage.key);
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-title">
+          ${stage.label}
+          <span class="badge badge-dim">${cards.length}</span>
+        </div>
+        ${cards.length ? cards.map(s => `
+          <div class="kanban-card ${tensionClass(s.score_tension)}" onclick="openSubjectDetail(${s.id})">
+            <div class="kc-name">${s.name}</div>
+            <div class="kc-meta">
+              <span class="badge badge-dim" style="font-size:10px">${s.category}</span>
+              ${s.score_tension ? `<span style="font-size:11px; color:var(--muted)">⚡ ${s.score_tension}</span>` : ''}
+            </div>
+          </div>
+        `).join('') : `<div style="font-size:12px; color:var(--dim); text-align:center; padding:20px">Vide</div>`}
+      </div>
+    `;
+  });
+  board.innerHTML = columns.join('');
+}
+
+function renderActivityTimeline() {
+  const el = document.getElementById('activity-timeline');
+  if (!state.subjects.length) return;
+  const items = state.subjects.slice(0, 6).map(s => {
+    const d = new Date(s.updated_at || s.created_at);
+    const time = d.toLocaleTimeString('fr', { hour:'2-digit', minute:'2-digit' });
+    return `<div class="tl-item"><div class="tl-dot"></div><div class="tl-time">${time}</div><div class="tl-text">${s.name} → ${s.status}</div></div>`;
+  });
+  el.innerHTML = items.join('');
+}
+
+async function addSubject() {
+  const name  = document.getElementById('f-subj-name').value.trim();
+  const cat   = document.getElementById('f-subj-cat').value;
+  const score = parseFloat(document.getElementById('f-subj-score').value) || 0;
+  const notes = document.getElementById('f-subj-notes').value.trim();
+  if (!name) return toast('Titre requis', 'error');
+  const s = await api('POST', '/subjects', { name, category:cat, score_tension:score, notes });
+  if (!s) return;
+  state.subjects.unshift(s);
+  renderRecentSubjects(); renderKanban();
+  closeModal('modal-add-subject');
+  document.getElementById('f-subj-name').value = '';
+  document.getElementById('f-subj-notes').value = '';
+  toast('Sujet créé', 'success');
+}
+
+function openSubjectDetail(id) {
+  const s = state.subjects.find(x => x.id === id);
+  if (!s) return;
+  state.currentSubjectId = id;
+  document.getElementById('detail-title').textContent = s.name;
+  document.getElementById('detail-badge').innerHTML = stageBadge(s.status);
+  document.getElementById('detail-score').textContent = s.score_tension ? '⚡ Score: ' + s.score_tension : '';
+  document.getElementById('detail-notes').value = s.notes || '';
+  document.getElementById('detail-status').value = s.status;
+  openModal('modal-subject-detail');
+}
+
+async function saveSubjectDetail() {
+  const id = state.currentSubjectId;
+  const status = document.getElementById('detail-status').value;
+  const notes  = document.getElementById('detail-notes').value;
+  const updated = await api('PATCH', '/subjects/' + id, { status, notes });
+  if (!updated) return;
+  const idx = state.subjects.findIndex(x => x.id === id);
+  if (idx >= 0) state.subjects[idx] = updated;
+  renderRecentSubjects(); renderKanban(); renderActivityTimeline();
+  closeModal('modal-subject-detail');
+  toast('Sujet mis à jour', 'success');
+}
+
+async function deleteSubject() {
+  if (!confirm('Supprimer ce sujet ?')) return;
+  const id = state.currentSubjectId;
+  await api('DELETE', '/subjects/' + id);
+  state.subjects = state.subjects.filter(x => x.id !== id);
+  renderRecentSubjects(); renderKanban();
+  closeModal('modal-subject-detail');
+  toast('Sujet supprimé', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+// AGENTS
+// ═══════════════════════════════════════════════════════
+async function loadAgents() {
+  const agents = await api('GET', '/agents');
+  if (!agents) return;
+  state.agents = agents;
+  const grid = document.getElementById('agents-grid');
+
+  // Si aucun agent encore (fichiers .md non créés)
+  if (!agents.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🤖</div><div class="empty-text">Aucun agent trouvé dans /agents/</div></div>';
+    return;
+  }
+
+  grid.innerHTML = agents.map(a => `
+    <div class="agent-card ${a.statut}" id="agent-card-${a.id}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start">
+        <div class="agent-id">${a.id}</div>
+        <span class="badge ${a.statut==='actif'?'badge-green':a.statut==='en-dev'?'badge-amber':'badge-dim'}">${a.statut}</span>
+      </div>
+      <div class="agent-nom">${a.nom}</div>
+      <div class="agent-meta">
+        ${a.last_run ? 'Dernier run: ' + new Date(a.last_run).toLocaleString('fr') : 'Jamais exécuté'}
+        ${a.last_status ? ` · ${a.last_status}` : ''}
+      </div>
+      <div class="agent-actions">
+        <button class="btn btn-sm btn-primary" onclick="triggerAgent('${a.id}')">▶ Run</button>
+        <button class="btn btn-sm" onclick="viewAgentLogs('${a.id}')">Logs</button>
+      </div>
+      <div class="log-box" id="logs-${a.id}" style="display:none"></div>
+    </div>
+  `).join('');
+}
+
+async function triggerAgent(id) {
+  const r = await api('POST', '/agents/' + id + '/trigger');
+  if (!r) return;
+  toast(`Agent ${id} déclenché (run #${r.run_id})`, 'success');
+  // Rafraîchir la carte
+  const a = state.agents.find(x => x.id === id);
+  if (a) {
+    a.last_run = new Date().toISOString();
+    a.last_status = 'running';
+    loadAgents();
+  }
+}
+
+async function viewAgentLogs(id) {
+  const logBox = document.getElementById('logs-' + id);
+  if (logBox.style.display === 'block') { logBox.style.display = 'none'; return; }
+  const runs = await api('GET', '/agents/' + id + '/runs');
+  if (!runs || !runs.length) { logBox.textContent = '(aucun run enregistré)'; }
+  else {
+    logBox.textContent = runs.map(r =>
+      `[${new Date(r.triggered_at).toLocaleString('fr')}] ${r.status}${r.log ? '\n' + r.log : ''}`
+    ).join('\n---\n');
+  }
+  logBox.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════
+// SOURCES
+// ═══════════════════════════════════════════════════════
+async function loadSources(type) {
+  state.currentSourceTab = type;
+  const data = await api('GET', '/sources/' + type);
+  if (!data) { document.getElementById('sources-content').innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">⚠️</div><div class="empty-text">Fichier non trouvé</div></div>'; return; }
+  state.sources[type] = data;
+  renderSourcesTable(type, data);
+}
+
+function switchSourceTab(type, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadSources(type);
+}
+
+function renderSourcesTable(type, data) {
+  const section = data.feeds || data.channels || data.apis;
+  if (!section) return;
+
+  let rows = '';
+  Object.entries(section).forEach(([cat, items]) => {
+    rows += `<div style="padding:8px 14px; background:var(--bg-s); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border)">${cat}</div>`;
+    items.forEach((item, idx) => {
+      rows += `
+        <div class="source-row">
+          <label class="toggle">
+            <input type="checkbox" ${item.actif ? 'checked' : ''}
+              onchange="toggleSource('${type}','${cat}',${idx},this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="source-name">${item.nom || item.name || '—'}</span>
+          <span class="source-cat">${item.categorie || item.category || ''}</span>
+          <span class="source-lang">${item.langue || ''}</span>
+          <span style="font-size:11px; color:var(--dim); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${item.url || ''}</span>
+        </div>
+      `;
+    });
+  });
+
+  document.getElementById('sources-content').innerHTML = rows || '<div class="empty" style="padding:40px"><div class="empty-text">Vide</div></div>';
+}
+
+async function toggleSource(type, cat, idx, active) {
+  await api('PATCH', `/sources/${type}/${cat}/${idx}`, { actif: active });
+  toast(active ? 'Source activée' : 'Source désactivée', 'info');
+}
+
+async function addSource() {
+  const type = document.getElementById('f-src-type').value;
+  const cat  = document.getElementById('f-src-cat').value;
+  const body = {
+    nom: document.getElementById('f-src-name').value.trim(),
+    url: document.getElementById('f-src-url').value.trim(),
+    langue: document.getElementById('f-src-lang').value,
+    categorie: cat, actif: true
+  };
+  if (!body.nom || !body.url) return toast('Nom et URL requis', 'error');
+  await api('POST', `/sources/${type}/${cat}`, body);
+  closeModal('modal-add-source');
+  loadSources(type);
+  toast('Source ajoutée', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+// SOCIAL (données en localStorage — pas d'API externe)
+// ═══════════════════════════════════════════════════════
+function renderSocial() {
+  const s = state.social;
+  // YouTube
+  document.getElementById('yt-subs').textContent   = s.yt_subs   || '—';
+  document.getElementById('yt-views').textContent  = s.yt_views  || '—';
+  document.getElementById('yt-videos').textContent = s.yt_videos || '—';
+  document.getElementById('yt-status').textContent = s.yt_subs ? 'Actif' : 'À créer';
+  document.getElementById('yt-status').className   = 'badge ' + (s.yt_subs ? 'badge-green' : 'badge-amber');
+  // TikTok
+  document.getElementById('tt-subs').textContent   = s.tt_subs   || '—';
+  document.getElementById('tt-views').textContent  = s.tt_views  || '—';
+  document.getElementById('tt-videos').textContent = s.tt_videos || '—';
+  document.getElementById('tt-status').textContent = s.tt_subs ? 'Actif' : 'À créer';
+  document.getElementById('tt-status').className   = 'badge ' + (s.tt_subs ? 'badge-green' : 'badge-amber');
+  // LinkedIn
+  document.getElementById('li-conn').textContent  = s.li_conn  || '—';
+  document.getElementById('li-imp').textContent   = s.li_imp   || '—';
+  document.getElementById('li-posts').textContent = s.li_posts || '—';
+  document.getElementById('li-status').textContent = s.li_conn ? 'Actif' : 'À configurer';
+  document.getElementById('li-status').className   = 'badge ' + (s.li_conn ? 'badge-green' : 'badge-amber');
+
+  loadPublishing();
+}
+
+function editSocial(platform) {
+  const s = state.social;
+  const fields = {
+    youtube:  [['yt_subs','Abonnés'],['yt_views','Vues totales'],['yt_videos','Nb vidéos']],
+    tiktok:   [['tt_subs','Abonnés'],['tt_views','Vues totales'],['tt_videos','Nb vidéos']],
+    linkedin: [['li_conn','Connexions'],['li_imp','Impressions/sem'],['li_posts','Posts Vizu']]
+  };
+  const titles = { youtube:'YouTube', tiktok:'TikTok', linkedin:'LinkedIn' };
+  document.getElementById('social-modal-title').textContent = titles[platform];
+  document.getElementById('social-modal-fields').innerHTML = fields[platform].map(([k,l]) => `
+    <div class="form-group">
+      <label>${l}</label>
+      <input id="sf-${k}" type="number" min="0" value="${s[k] || ''}" placeholder="0">
+    </div>
+  `).join('');
+  document.getElementById('modal-social').dataset.platform = platform;
+  openModal('modal-social');
+}
+
+function saveSocial() {
+  const platform = document.getElementById('modal-social').dataset.platform;
+  const keys = { youtube:['yt_subs','yt_views','yt_videos'], tiktok:['tt_subs','tt_views','tt_videos'], linkedin:['li_conn','li_imp','li_posts'] };
+  keys[platform].forEach(k => {
+    const v = document.getElementById('sf-' + k).value;
+    if (v !== '') state.social[k] = parseInt(v);
+  });
+  localStorage.setItem('vizu-social', JSON.stringify(state.social));
+  closeModal('modal-social');
+  renderSocial();
+  toast('Données sociales sauvegardées', 'success');
+}
+
+async function loadPublishing() {
+  const pubs = await api('GET', '/publishing');
+  if (!pubs) return;
+  state.publishing = pubs;
+  const el = document.getElementById('publishing-list');
+  if (!pubs.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune publication encore</div></div>';
+    return;
+  }
+  const icons = { youtube:'▶️', tiktok:'🎵', linkedin:'💼' };
+  el.innerHTML = pubs.map(p => `
+    <div class="source-row">
+      <span style="font-size:20px">${icons[p.platform] || '📱'}</span>
+      <span class="source-name">${p.subject_name || '—'}</span>
+      <span class="source-cat">${p.platform}</span>
+      <span style="font-size:12px; color:var(--muted)">${p.views || 0} vues</span>
+      <span style="font-size:11px; color:var(--dim)">${p.url ? `<a href="${p.url}" target="_blank" style="color:var(--cyan); text-decoration:none">Lien ↗</a>` : ''}</span>
+      <span style="font-size:11px; color:var(--dim)">${new Date(p.published_at).toLocaleDateString('fr')}</span>
+    </div>
+  `).join('');
+}
+
+async function addPublishing() {
+  const subject_id = document.getElementById('f-pub-subject').value;
+  const platform   = document.getElementById('f-pub-platform').value;
+  const url        = document.getElementById('f-pub-url').value.trim();
+  const views      = parseInt(document.getElementById('f-pub-views').value) || 0;
+  if (!subject_id) return toast('Sélectionne un sujet', 'error');
+  await api('POST', '/publishing', { subject_id, platform, url, views });
+  closeModal('modal-add-publish');
+  loadPublishing();
+  toast('Publication enregistrée', 'success');
+}
+
+function populateSubjectSelect() {
+  const sel = document.getElementById('f-pub-subject');
+  sel.innerHTML = state.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// METRICS
+// ═══════════════════════════════════════════════════════
+async function loadMetrics() {
+  const m = await api('GET', '/metrics');
+  if (!m) return;
+  state.metrics = m;
+  document.getElementById('metrics-week').textContent = m.week;
+  document.getElementById('in-shorts').value = m.shorts_count || '';
+  document.getElementById('in-yt').value     = m.youtube_views || '';
+  document.getElementById('in-tt').value     = m.tiktok_views || '';
+  document.getElementById('in-li').value     = m.linkedin_impressions || '';
+  document.getElementById('in-cost').value   = m.ai_cost_usd || '';
+  renderMetricsSummary(m);
+}
+
+function renderMetricsSummary(m) {
+  document.getElementById('s-shorts').textContent = m.shorts_count + ' / 3';
+  document.getElementById('s-yt').textContent     = (m.youtube_views || 0).toLocaleString('fr') + ' vues';
+  document.getElementById('s-tt').textContent     = (m.tiktok_views || 0).toLocaleString('fr') + ' vues';
+  document.getElementById('s-li').textContent     = (m.linkedin_impressions || 0).toLocaleString('fr') + ' impressions';
+  document.getElementById('s-cost').textContent   = '$' + (m.ai_cost_usd || 0).toFixed(2);
+}
+
+async function saveMetrics() {
+  const body = {
+    shorts_count:          parseInt(document.getElementById('in-shorts').value) || 0,
+    youtube_views:         parseInt(document.getElementById('in-yt').value) || 0,
+    tiktok_views:          parseInt(document.getElementById('in-tt').value) || 0,
+    linkedin_impressions:  parseInt(document.getElementById('in-li').value) || 0,
+    ai_cost_usd:           parseFloat(document.getElementById('in-cost').value) || 0
+  };
+  const m = await api('PATCH', '/metrics', body);
+  if (!m) return;
+  state.metrics = m;
+  renderMetricsSummary(m);
+  // Update dashboard cards
+  document.getElementById('m-shorts').textContent = m.shorts_count || 0;
+  document.getElementById('m-views').textContent  = (m.youtube_views || 0) + (m.tiktok_views || 0);
+  document.getElementById('m-cost').textContent   = '$' + (m.ai_cost_usd || 0).toFixed(2);
+  toast('Métriques sauvegardées', 'success');
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  await loadDashboard();
+  populateSubjectSelect();
+  // Rafraîchir toutes les 60s
+  setInterval(loadDashboard, 60000);
+}
+
+init();
+</script>
+</body>
+</html>
