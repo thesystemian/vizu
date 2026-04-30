@@ -1,8 +1,6 @@
-# VIZU — Everything is Data
+# ClemenciaData
 
-**Mission:** Transform raw data into visual clarity. Help citizens become discerning through OSINT-driven journalism.
-
-**Vision:** A solo-operated YouTube + TikTok + LinkedIn channel that visualizes **mainstream vs alternative** data narratives in geopolitics, IA, and tech — with no face, no voice, just **pure visual storytelling**.
+**Dataviz, analytics & documentation for Clemencia Garden**
 
 ---
 
